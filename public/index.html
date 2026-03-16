@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKKD Knowledge Bot - MVP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TKKD Knowledge Bot</h1>
+            <p class="subtitle">Tra cứu tài liệu dự án nội bộ</p>
+        </header>
+
+        <main>
+            <!-- Form nhập liệu -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="email-input">Email công ty:</label>
+                    <input type="email" id="email-input" placeholder="Ví dụ: nv.kinhdoanh@congty.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="question-input">Câu hỏi của bạn:</label>
+                    <textarea id="question-input" rows="3" placeholder="Nhập câu hỏi về tài liệu dự án... (Ví dụ: Dự án ABC khi nào mở bán?)" required></textarea>
+                </div>
+
+                <button id="send-btn" class="btn-primary">Gửi Câu Hỏi</button>
+            </div>
+
+            <!-- Khu vực hiển thị kết quả -->
+            <div class="result-section" id="result-section" style="display: none;">
+                <!-- Trạng thái Loading -->
+                <div id="loading-indicator" class="loading-box" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Đang tìm kiếm câu trả lời...</p>
+                </div>
+
+                <!-- Thông báo lỗi (ví dụ Access Denied) -->
+                <div id="error-box" class="alert error" style="display: none;">
+                    <strong id="error-title">Lỗi!</strong>
+                    <p id="error-message">Mô tả lỗi</p>
+                </div>
+
+                <!-- Kết quả thành công -->
+                <div id="success-box" class="success-content" style="display: none;">
+                    <div class="answer-box">
+                        <h3>🤖 Trả lời:</h3>
+                        <p id="bot-answer" class="answer-text"></p>
+                    </div>
+                    
+                    <div class="source-box">
+                        <h4>📌 Nguồn tài liệu:</h4>
+                        <p><strong>Tên tài liệu:</strong> <span id="doc-name"></span></p>
+                        <p><strong>Link file:</strong> <a id="doc-link" href="#" target="_blank">Xem tài liệu chi tiết</a></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
