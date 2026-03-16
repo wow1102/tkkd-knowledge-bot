@@ -3,9 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 // const { getUserByEmail, getActiveDocuments } = require('./services/googleSheetsService'); -- Chuyển sang Supabase
-const { getUserByEmail, getActiveDocuments } = require('./services/supabaseService');
+const { getUserByEmail, getActiveDocuments, getActiveInventory, logInventoryRequest } = require('./services/supabaseService');
 const { getDriveFileInfo } = require('./services/googleDriveService');
 const { selectBestDocument, generateAnswer } = require('./services/openaiService');
+const { parseInventoryQuery } = require('./services/parserService');
+const { filterInventory } = require('./services/inventoryFilterService');
 
 const app = express();
 app.use(cors());
@@ -104,6 +106,57 @@ app.post('/ask', async (req, res) => {
         res.status(500).json({ 
             error: 'Internal Server Error', 
             message: 'Đã xảy ra lỗi trong quá trình xử lý yêu cầu.' 
+        });
+    }
+});
+
+// ============================================
+// PHASE 2: INVENTORY QUERY (TRA BẢNG HÀNG)
+// ============================================
+app.post('/inventory-query', async (req, res) => {
+    try {
+        const { email, question } = req.body;
+        
+        console.log(`\n[INFO] Inventory Request | Email: ${email} | Question: "${question}"`);
+
+        if (!email || !question) {
+            return res.status(400).json({ error: 'Email và câu hỏi tra cứu là bắt buộc' });
+        }
+
+        // 1. Kiểm tra Email User
+        const user = await getUserByEmail(email);
+        if (!user || user.status !== 'Active') {
+            return res.status(403).json({ 
+                error: 'Access Denied', 
+                message: 'Bạn không có quyền tra cứu bảng hàng.' 
+            });
+        }
+
+        // 2. Parse ngữ nghĩa câu hỏi bằng LLM
+        const parsedFiltersJSON = await parseInventoryQuery(question);
+        console.log(`[INFO] Parsed Filters:`, parsedFiltersJSON);
+
+        // 3. Backend kéo Data từ Inventory Sheet (Supabase)
+        const inventoryList = await getActiveInventory();
+        
+        // 4. Màng lọc Deterministic Javascript
+        const filteredResults = filterInventory(inventoryList, parsedFiltersJSON);
+
+        // 5. Ghi log lịch sử request
+        await logInventoryRequest(email, question, parsedFiltersJSON, filteredResults.length);
+
+        console.log(`[INFO] Returning ${filteredResults.length} units.`);
+
+        res.json({
+            filters: parsedFiltersJSON,
+            results: filteredResults
+        });
+
+    } catch (error) {
+        console.error('[ERROR] /inventory-query Endpoint Error:', error.message);
+        res.status(500).json({ 
+            error: 'Internal Server Error', 
+            message: 'Đã xảy ra lỗi trong quá trình lọc bảng hàng.' 
         });
     }
 });

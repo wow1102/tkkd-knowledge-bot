@@ -85,7 +85,73 @@ async function getActiveDocuments() {
     }
 }
 
+/**
+ * Đọc bảng hàng từ ai_inventory_master (chỉ lấy status = active)
+ */
+async function getActiveInventory() {
+    if (!supabase) {
+        console.log("[MOCK SUPABASE] Trả về mock inventory từ database giả lập");
+        return [
+            {
+                unit_code: "DK-A12.03", project_name: "Vinhomes Dương Kinh",
+                bedroom_type: "2PN", area: 65, direction: "Đông Nam", floor: 12, tower: "A",
+                list_price: 3600000000, status: "available", updated_at: new Date().toISOString()
+            },
+            {
+                unit_code: "DK-B05.01", project_name: "Vinhomes Dương Kinh",
+                bedroom_type: "1PN", area: 45, direction: "Tây Bắc", floor: 5, tower: "B",
+                list_price: 2800000000, status: "available", updated_at: new Date().toISOString()
+            },
+            {
+                unit_code: "LM-C15.02", project_name: "LandMark",
+                bedroom_type: "3PN", area: 110, direction: "Đông Nam", floor: 15, tower: "C",
+                list_price: 5500000000, status: "available", updated_at: new Date().toISOString()
+            }
+        ];
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('ai_inventory_master')
+            .select('*')
+            // .eq('status', 'available') // Lọc cứng ở DB nếu cần, hoặc để script phía server lo
+            ;
+
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error("Lỗi khi fetch Inventory từ Supabase:", err.message);
+        throw err;
+    }
+}
+
+/**
+ * Ghi log request inventory
+ */
+async function logInventoryRequest(email, question, parsed_filters, result_count) {
+    if (!supabase) {
+        console.log(`[MOCK SUPABASE] Đã ghi log request Inventory Query. Question: ${question} | Kết quả: ${result_count}`);
+        return;
+    }
+
+    try {
+        await supabase
+            .from('ai_inventory_log')
+            .insert([{
+                email,
+                question,
+                parsed_filters: JSON.stringify(parsed_filters),
+                result_count,
+                status: result_count > 0 ? "success" : "no_match"
+            }]);
+    } catch (err) {
+        console.error("Lỗi khi ghi Log Inventory:", err.message);
+    }
+}
+
 module.exports = {
     getUserByEmail,
-    getActiveDocuments
+    getActiveDocuments,
+    getActiveInventory,
+    logInventoryRequest
 };

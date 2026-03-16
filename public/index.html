@@ -10,41 +10,64 @@
     <div class="container">
         <header>
             <h1>TKKD Knowledge Bot</h1>
-            <p class="subtitle">Tra cứu tài liệu dự án nội bộ</p>
+            <p class="subtitle">Tra cứu tài liệu dự án nội bộ & Bảng hàng</p>
         </header>
 
         <main>
-            <!-- Form nhập liệu -->
+            <!-- Tabs Navigation -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('knowledge-bot')">📖 Hỏi Đáp Tài Liệu</button>
+                <button class="tab-btn" onclick="switchTab('inventory-query')">🏢 Tra Cứu Bảng Hàng</button>
+            </div>
+
+            <!-- Form nhập liệu dùng chung -->
             <div class="form-section">
+                <!-- Vùng nhập Email (Xài chung) -->
                 <div class="form-group">
                     <label for="email-input">Email công ty:</label>
                     <input type="email" id="email-input" placeholder="Ví dụ: nv.kinhdoanh@congty.com" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="question-input">Câu hỏi của bạn:</label>
-                    <textarea id="question-input" rows="3" placeholder="Nhập câu hỏi về tài liệu dự án... (Ví dụ: Dự án ABC khi nào mở bán?)" required></textarea>
+                <!-- Khu vực hỏi đáp tài liệu -->
+                <div id="tab-knowledge" class="tab-content active-tab">
+                    <div class="form-group">
+                        <label for="question-input">Câu hỏi về tài liệu:</label>
+                        <textarea id="question-input" rows="3" placeholder="Nhập câu hỏi... (Ví dụ: Dự án ABC khi nào mở bán?)" required></textarea>
+                    </div>
+                    <button onclick="askKnowledge()" class="btn-primary">Hỏi Đáp</button>
                 </div>
 
-                <button id="send-btn" class="btn-primary">Gửi Câu Hỏi</button>
+                <!-- Khu vực hỏi bảng hàng -->
+                <div id="tab-inventory" class="tab-content" style="display: none;">
+                    <div class="form-group">
+                        <label for="inventory-input">Tìm kiếm bảng hàng:</label>
+                        <textarea id="inventory-input" rows="3" placeholder="Ví dụ: Căn 2PN dưới 5 tỷ hướng Đông Nam toà Landmark..." required></textarea>
+                    </div>
+                    <button onclick="askInventory()" class="btn-primary">Lọc Bảng Hàng</button>
+                </div>
             </div>
-
-            <!-- Khu vực hiển thị kết quả -->
+            <!-- Khu vực hiển thị kết quả (Dùng chung cho alert/loading) -->
             <div class="result-section" id="result-section" style="display: none;">
                 <!-- Trạng thái Loading -->
                 <div id="loading-indicator" class="loading-box" style="display: none;">
                     <div class="spinner"></div>
-                    <p>Đang tìm kiếm câu trả lời...</p>
+                    <p>Đang xử lý yêu cầu...</p>
                 </div>
 
-                <!-- Thông báo lỗi (ví dụ Access Denied) -->
+                <!-- Thông báo lỗi -->
                 <div id="error-box" class="alert error" style="display: none;">
                     <strong id="error-title">Lỗi!</strong>
                     <p id="error-message">Mô tả lỗi</p>
                 </div>
 
-                <!-- Kết quả thành công -->
-                <div id="success-box" class="success-content" style="display: none;">
+                <!-- Thông báo trạng thái trống / Empty state -->
+                <div id="empty-box" class="alert empty-state" style="display: none;">
+                    <strong id="empty-title">Không tìm thấy dữ liệu</strong>
+                    <p id="empty-message">Thử thay đổi điều kiện lọc.</p>
+                </div>
+
+                <!-- Kết quả thành công: Học Máy (Knowledge) -->
+                <div id="success-knowledge" class="success-content" style="display: none;">
                     <div class="answer-box">
                         <h3>🤖 Trả lời:</h3>
                         <p id="bot-answer" class="answer-text"></p>
@@ -56,8 +79,35 @@
                         <p><strong>Link file:</strong> <a id="doc-link" href="#" target="_blank">Xem tài liệu chi tiết</a></p>
                     </div>
                 </div>
+
+                <!-- Kết quả thành công: Bảng Hàng (Inventory) -->
+                <div id="success-inventory" class="success-content inventory-table-container" style="display: none;">
+                    <h3>🏘 Kết Quả Lọc Bảng Hàng: <span id="inventory-count" style="color:red">0</span> Căn</h3>
+                    <p style="font-size: 0.85em; margin-bottom: 10px;"><i>Ghi chú: Giá trị JSON Filter parser: <span id="filter-debug"></span></i></p>
+                    
+                    <div style="overflow-x:auto;">
+                        <table id="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Unit Code</th>
+                                    <th>Phòng Ngủ</th>
+                                    <th>Diện tích</th>
+                                    <th>Hướng</th>
+                                    <th>Tầng</th>
+                                    <th>Toà</th>
+                                    <th>Giá (VND)</th>
+                                    <th>Trạng thái</th>
+                                    <th>Cập nhật lúc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body">
+                                <!-- Render rows by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </main>
+
     </div>
 
     <script src="script.js"></script>
